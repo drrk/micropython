@@ -510,7 +510,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(pyb_lcd_text_obj, 5, 5, pyb_lcd_text)
 STATIC mp_obj_t pyb_lcd_show(mp_obj_t self_in) {
     pyb_lcd_obj_t *self = self_in;
     memcpy(self->pix_buf, self->pix_buf2, LCD_PIX_BUF_BYTE_SIZE);
-    for (uint page = 0; page < 4; page++) {
+    for (uint page = 0; page < 8; page++) {
         lcd_out(self, LCD_INSTR, 0xb0 | page); // page address set
         lcd_out(self, LCD_INSTR, 0x10); // column address set upper; 0
         lcd_out(self, LCD_INSTR, 0x00); // column address set lower; 0
