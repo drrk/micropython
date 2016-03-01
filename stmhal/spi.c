@@ -203,7 +203,7 @@ void spi_init(SPI_HandleTypeDef *spi, bool enable_nss_pin) {
         self = &pyb_spi_obj[2];
         pins[0] = &MICROPY_HW_SPI3_NSS;
         pins[1] = &MICROPY_HW_SPI3_SCK;
-        pins[2] = &MICROPY_HW_SPI3_MISO;
+        pins[2] = 0;//&MICROPY_HW_SPI3_MISO;
         pins[3] = &MICROPY_HW_SPI3_MOSI;
         GPIO_InitStructure.Alternate = GPIO_AF6_SPI3;
         // enable the SPI clock
@@ -248,9 +248,11 @@ void spi_init(SPI_HandleTypeDef *spi, bool enable_nss_pin) {
     }
 
     for (uint i = (enable_nss_pin ? 0 : 1); i < 4; i++) {
+		if (pins[i] != 0){
         mp_hal_gpio_clock_enable(pins[i]->gpio);
         GPIO_InitStructure.Pin = pins[i]->pin_mask;
         HAL_GPIO_Init(pins[i]->gpio, &GPIO_InitStructure);
+		}
     }
 
     // init the SPI device
