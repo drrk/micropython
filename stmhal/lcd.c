@@ -206,7 +206,7 @@ STATIC mp_obj_t pyb_lcd_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp
     // configure pins
     // TODO accept an SPI object and pin objects for full customisation
     if ((lcd_id[0] | 0x20) == 'x' && lcd_id[1] == '\0') {
-        lcd->spi = &SPIHandle1;
+        lcd->spi = &SPIHandle3;
         lcd->pin_cs1 = &pyb_pin_X3;
         lcd->pin_rst = &pyb_pin_X4;
         lcd->pin_a0 = &pyb_pin_X5;
@@ -235,7 +235,7 @@ STATIC mp_obj_t pyb_lcd_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp
         // SPI2 and SPI3 are on APB1
         spi_clock = HAL_RCC_GetPCLK1Freq();
     }
-    uint br_prescale = spi_clock / 16000000; // datasheet says LCD can run at 20MHz, but we go for 16MHz
+    uint br_prescale = spi_clock / 1000000; //16000000; // datasheet says LCD can run at 20MHz, but we go for 16MHz
     if (br_prescale <= 2) { init->BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2; }
     else if (br_prescale <= 4) { init->BaudRatePrescaler = SPI_BAUDRATEPRESCALER_4; }
     else if (br_prescale <= 8) { init->BaudRatePrescaler = SPI_BAUDRATEPRESCALER_8; }
