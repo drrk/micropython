@@ -80,10 +80,10 @@
 #define LCD_DATA (1)
 
 #define LCD_CHAR_BUF_W (16)
-#define LCD_CHAR_BUF_H (4)
+#define LCD_CHAR_BUF_H (8)
 
 #define LCD_PIX_BUF_W (128)
-#define LCD_PIX_BUF_H (32)
+#define LCD_PIX_BUF_H (64)
 #define LCD_PIX_BUF_BYTE_SIZE (LCD_PIX_BUF_W * LCD_PIX_BUF_H / 8)
 
 typedef struct _pyb_lcd_obj_t {
@@ -289,18 +289,26 @@ STATIC mp_obj_t pyb_lcd_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp
     HAL_Delay(1); // wait for reset; 2us min
     lcd->pin_rst->gpio->BSRRL = lcd->pin_rst->pin_mask; // RST=1; enable
     HAL_Delay(1); // wait for reset; 2us min
-    lcd_out(lcd, LCD_INSTR, 0xa0); // ADC select, normal
+    lcd_out(lcd, LCD_INSTR, 0xa7); // ADC select, reverse
     lcd_out(lcd, LCD_INSTR, 0xc0); // common output mode select, normal (this flips the display)
     lcd_out(lcd, LCD_INSTR, 0xa2); // LCD bias set, 1/9 bias
+    lcd_out(lcd, LCD_INSTR, 0x40); // display start line set, 0
+
+    lcd_out(lcd, LCD_INSTR, 0x2c);
+    HAL_Delay(1); // wait a bit
+    lcd_out(lcd, LCD_INSTR, 0x2e);
+    HAL_Delay(1); // wait a bit
     lcd_out(lcd, LCD_INSTR, 0x2f); // power control set, 0b111=(booster on, vreg on, vfollow on)
-    lcd_out(lcd, LCD_INSTR, 0x21); // v0 voltage regulator internal resistor ratio set, 0b001=small
+
+    lcd_out(lcd, LCD_INSTR, 0x27); // v0 voltage regulator internal resistor ratio set, 0b001=small
+
     lcd_out(lcd, LCD_INSTR, 0x81); // electronic volume mode set
-    lcd_out(lcd, LCD_INSTR, 0x28); // electronic volume register set
+    lcd_out(lcd, LCD_INSTR, 0x08); // electronic volume register set
     lcd_out(lcd, LCD_INSTR, 0x40); // display start line set, 0
     lcd_out(lcd, LCD_INSTR, 0xaf); // LCD display, on
 
     // clear LCD RAM
-    for (int page = 0; page < 4; page++) {
+    for (int page = 0; page < 8; page++) {
         lcd_out(lcd, LCD_INSTR, 0xb0 | page); // page address set
         lcd_out(lcd, LCD_INSTR, 0x10); // column address set upper
         lcd_out(lcd, LCD_INSTR, 0x00); // column address set lower
@@ -416,7 +424,7 @@ STATIC mp_obj_t pyb_lcd_get(mp_obj_t self_in, mp_obj_t x_in, mp_obj_t y_in) {
     pyb_lcd_obj_t *self = self_in;
     int x = mp_obj_get_int(x_in);
     int y = mp_obj_get_int(y_in);
-    if (0 <= x && x <= 127 && 0 <= y && y <= 31) {
+    if (0 <= x && x <= 127 && 0 <= y && y <= 63) {
         uint byte_pos = x + 128 * ((uint)y >> 3);
         if (self->pix_buf[byte_pos] & (1 << (y & 7))) {
             return mp_obj_new_int(1);
@@ -435,7 +443,7 @@ STATIC mp_obj_t pyb_lcd_pixel(mp_uint_t n_args, const mp_obj_t *args) {
     pyb_lcd_obj_t *self = args[0];
     int x = mp_obj_get_int(args[1]);
     int y = mp_obj_get_int(args[2]);
-    if (0 <= x && x <= 127 && 0 <= y && y <= 31) {
+    if (0 <= x && x <= 127 && 0 <= y && y <= 63) {
         uint byte_pos = x + 128 * ((uint)y >> 3);
         if (mp_obj_get_int(args[3]) == 0) {
             self->pix_buf2[byte_pos] &= ~(1 << (y & 7));
