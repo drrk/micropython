@@ -289,7 +289,7 @@ STATIC mp_obj_t pyb_lcd_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp
     HAL_Delay(1); // wait for reset; 2us min
     lcd->pin_rst->gpio->BSRRL = lcd->pin_rst->pin_mask; // RST=1; enable
     HAL_Delay(1); // wait for reset; 2us min
-    lcd_out(lcd, LCD_INSTR, 0xa7); // ADC select, reverse
+    lcd_out(lcd, LCD_INSTR, 0xa6); // ADC select, reverse
     lcd_out(lcd, LCD_INSTR, 0xc0); // common output mode select, normal (this flips the display)
     lcd_out(lcd, LCD_INSTR, 0xa2); // LCD bias set, 1/9 bias
     lcd_out(lcd, LCD_INSTR, 0x40); // display start line set, 0
