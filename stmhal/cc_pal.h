@@ -1,9 +1,9 @@
 /*
- * This file is part of the Micro Python project, http://micropython.org/
+ * Wrapper for Micro Python SPI functions for CC3100 Driver
  *
  * The MIT License (MIT)
  *
- * Copyright (c) 2013, 2014 Damien P. George
+ * Copyright (c) 2016 Kimball Johnson
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,15 +24,49 @@
  * THE SOFTWARE.
  */
 
-extern SPI_HandleTypeDef SPIHandle1;
-extern SPI_HandleTypeDef SPIHandle2;
-extern SPI_HandleTypeDef SPIHandle3;
-extern SPI_HandleTypeDef SPIHandle4;
-extern SPI_HandleTypeDef SPIHandle5;
-extern SPI_HandleTypeDef SPIHandle6;
-extern const mp_obj_type_t pyb_spi_type;
+#ifndef __CC3100_SPI_WRAPPER_H__
+#define	__CC3100_SPI_WRAPPER_H__
 
-void spi_init0(void);
-void spi_init(SPI_HandleTypeDef *spi, bool enable_nss_pin);
-SPI_HandleTypeDef *spi_get_handle(mp_obj_t o);
-void spi_deinit(SPI_HandleTypeDef *spi);
+#ifdef	__cplusplus
+extern "C" {
+#endif
+
+#include <string.h>
+#include <stdarg.h>
+#include <errno.h>
+
+
+#include "py/nlr.h"
+#include "py/objtuple.h"
+#include "py/objlist.h"
+#include "py/stream.h"
+#include "py/runtime.h"
+#include "netutils.h"
+#include "pin.h"
+#include "genhdr/pins.h"
+#include "spi.h"
+#include "pybioctl.h"
+#include "simplelink.h"
+#define Fd_t int
+
+int spi_Close(Fd_t Fd);
+Fd_t spi_Open(char* pIfName , unsigned long flags);
+
+// Contrary to the documentation pBuff is unsigned char type not char type
+int spi_Read(Fd_t Fd , unsigned char* pBuff , int Len);
+int spi_Write(Fd_t Fd , unsigned char* pBuff , int Len);
+void NwpPowerOnPreamble(void);
+void NwpPowerOn(void);
+void NwpPowerOff(void);
+#define SL_P_EVENT_HANDLER void*
+int NwpRegisterInterruptHandler(SL_P_EVENT_HANDLER InterruptHdl , void* pValue);
+void NwpMaskInterrupt();
+void NwpUnMaskInterrupt();
+
+
+#ifdef  __cplusplus
+}
+#endif // __cplusplus
+
+
+#endif

@@ -890,16 +890,19 @@ _SlReturnVal_t _SlDrvMsgRead(void)
     
     VERIFY_RET_OK(_SlDrvRxHdrRead((_u8*)(uBuf.TempBuf), &AlignSize));
 
-    OpCode = OPCODE(uBuf.TempBuf);
-    RespPayloadLen = RSP_PAYLOAD_LEN(uBuf.TempBuf);
+    _SlResponseHeader_t respHeader;
+    memcpy(&respHeader, uBuf.TempBuf, sizeof(respHeader));
+
+    OpCode = OPCODE(&respHeader);
+    RespPayloadLen = RSP_PAYLOAD_LEN(&respHeader);
 
 
     /* 'Init Compelete' message bears no valid FlowControl info */
     if(SL_OPCODE_DEVICE_INITCOMPLETE != OpCode)
     {
-        g_pCB->FlowContCB.TxPoolCnt = ((_SlResponseHeader_t *)uBuf.TempBuf)->TxPoolCnt;
-        g_pCB->SocketNonBlocking = ((_SlResponseHeader_t *)uBuf.TempBuf)->SocketNonBlocking;
-        g_pCB->SocketTXFailure = ((_SlResponseHeader_t *)uBuf.TempBuf)->SocketTXFailure;
+        g_pCB->FlowContCB.TxPoolCnt = respHeader.TxPoolCnt;
+        g_pCB->SocketNonBlocking = respHeader.SocketNonBlocking;
+        g_pCB->SocketTXFailure = respHeader.SocketTXFailure;
 
         if(g_pCB->FlowContCB.TxPoolCnt > FLOW_CONT_MIN)
         {
@@ -979,6 +982,8 @@ _SlReturnVal_t _SlDrvMsgRead(void)
     case RECV_RESP_CLASS:
         {
             _u8   ExpArgSize; /*  Expected size of Recv/Recvfrom arguments */
+            _SocketResponse_t sockResp;
+            memcpy(&sockResp,&(uBuf.TempBuf[4]),sizeof(sockResp));
 
                 switch(OpCode)
             {
@@ -997,15 +1002,15 @@ _SlReturnVal_t _SlDrvMsgRead(void)
 
             /*  Read first 4 bytes of Recv/Recvfrom response to get SocketId and actual  */
             /*  response data length */
-            NWP_IF_READ_CHECK(g_pCB->FD, &uBuf.TempBuf[4], RECV_ARGS_SIZE);
+            NWP_IF_READ_CHECK(g_pCB->FD, (_u8*)&sockResp, RECV_ARGS_SIZE);
 
             /*  Validate Socket ID and Received Length value.  */
-            VERIFY_PROTOCOL((SD(&uBuf.TempBuf[4])& BSD_SOCKET_ID_MASK) < SL_MAX_SOCKETS);
+            VERIFY_PROTOCOL((SD(&sockResp)& BSD_SOCKET_ID_MASK) < SL_MAX_SOCKETS);
 
                  _SlDrvProtectionObjLockWaitForever();
 
             /* go over the active list if exist to find obj waiting for this Async event */
-				VERIFY_RET_OK(_SlFindAndSetActiveObj(OpCode,SD(&uBuf.TempBuf[4]) & BSD_SOCKET_ID_MASK));
+				VERIFY_RET_OK(_SlFindAndSetActiveObj(OpCode,SD(&sockResp) & BSD_SOCKET_ID_MASK));
 
             /*  Verify data is waited on this socket. The pArgs should have been set by _SlDrvDataReadOp(). */
             VERIFY_SOCKET_CB(NULL !=  ((_SlArgsData_t *)(g_pCB->ObjPool[g_pCB->FunctionParams.AsyncExt.ActionIndex].pData))->pArgs);	
@@ -1022,7 +1027,7 @@ _SlReturnVal_t _SlDrvMsgRead(void)
             /*  Here g_pCB->ObjPool[g_pCB->FunctionParams.AsyncExt.ActionIndex].pData contains requested(expected) Recv/Recvfrom DataSize. */
             /*  Overwrite requested DataSize with actual one. */
             /*  If error is received, this information will be read from arguments. */
-            if(ACT_DATA_SIZE(&uBuf.TempBuf[4]) > 0)
+            if(ACT_DATA_SIZE(&sockResp) > 0)
             {       
                 VERIFY_SOCKET_CB(NULL != ((_SlArgsData_t *)(g_pCB->ObjPool[g_pCB->FunctionParams.AsyncExt.ActionIndex].pRespArgs))->pData);
 
@@ -1030,8 +1035,8 @@ _SlReturnVal_t _SlDrvMsgRead(void)
                 /*  therefore check the requested length and read only  */
                 /*  4 bytes aligned data. The rest unaligned (if any) will be read */
                 /*  and copied to a TailBuffer  */
-                LengthToCopy = ACT_DATA_SIZE(&uBuf.TempBuf[4]) & (3);
-                AlignedLengthRecv = ACT_DATA_SIZE(&uBuf.TempBuf[4]) & (~3);
+                LengthToCopy = ACT_DATA_SIZE(&sockResp) & (3);
+                AlignedLengthRecv = ACT_DATA_SIZE(&sockResp) & (~3);
                 if( AlignedLengthRecv >= 4)
                 {
                     NWP_IF_READ_CHECK(g_pCB->FD,((_SlArgsData_t *)(g_pCB->ObjPool[g_pCB->FunctionParams.AsyncExt.ActionIndex].pRespArgs))->pData,AlignedLengthRecv );                      
@@ -1064,7 +1069,7 @@ _SlReturnVal_t _SlDrvMsgRead(void)
         if((NULL != g_pCB->FunctionParams.pCmdExt) && (0 != g_pCB->FunctionParams.pCmdExt->RxPayloadLen))
         {
             /*  Actual size of command's response payload: <msg_payload_len> - <rsp_args_len> */
-            _i16    ActDataSize = RSP_PAYLOAD_LEN(uBuf.TempBuf) - g_pCB->FunctionParams.pCmdCtrl->RxDescLen;
+            _i16    ActDataSize = RSP_PAYLOAD_LEN(&respHeader) - g_pCB->FunctionParams.pCmdCtrl->RxDescLen;
 
             g_pCB->FunctionParams.pCmdExt->ActualRxPayloadLen = ActDataSize;
 

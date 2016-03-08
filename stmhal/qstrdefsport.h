@@ -492,6 +492,13 @@ Q(security)
 Q(bssid)
 #endif
 
+// for CC3100 class
+#if MICROPY_PY_CC3100
+Q(CC3100)
+Q(connect)
+Q(disconnect)
+#endif
+
 // for stm module
 Q(stm)
 Q(mem)
