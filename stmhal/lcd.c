@@ -82,6 +82,9 @@
 #define LCD_CHAR_BUF_W (16)
 #define LCD_CHAR_BUF_H (8)
 
+#define LCD_CHAR_WID (8)
+#define LCD_CHAR_HIG (8)
+
 #define LCD_PIX_BUF_W (128)
 #define LCD_PIX_BUF_H (64)
 #define LCD_PIX_BUF_BYTE_SIZE (LCD_PIX_BUF_W * LCD_PIX_BUF_H / 8)
@@ -111,6 +114,46 @@ STATIC void lcd_delay(void) {
     __asm volatile ("nop\nnop");
 }
 
+
+
+
+
+STATIC void lcd_write_cmd(pyb_lcd_obj_t *lcd, uint8_t reg) {
+	lcd->pin_cs1->gpio->BSRRH = lcd->pin_cs1->pin_mask; // CS=0; enable
+	lcd->pin_a0->gpio->BSRRH = lcd->pin_a0->pin_mask;   // command
+	HAL_SPI_Transmit(lcd->spi, &reg, 1, 1000);
+	lcd->pin_cs1->gpio->BSRRL = lcd->pin_cs1->pin_mask; // CS=1; disable
+}
+
+
+STATIC void lcd_write_reg(pyb_lcd_obj_t *lcd, uint8_t reg, char *i) {
+	lcd_delay();
+	lcd->pin_cs1->gpio->BSRRH = lcd->pin_cs1->pin_mask; // CS=0; enable
+	lcd->pin_a0->gpio->BSRRH = lcd->pin_a0->pin_mask;   // command
+	HAL_SPI_Transmit(lcd->spi, &reg, 1, 1000);
+	lcd->pin_cs1->gpio->BSRRL = lcd->pin_cs1->pin_mask;
+	lcd_delay();lcd_delay();lcd_delay();
+	lcd->pin_a0->gpio->BSRRL = lcd->pin_a0->pin_mask;
+	lcd->pin_cs1->gpio->BSRRH = lcd->pin_cs1->pin_mask;
+	HAL_SPI_Transmit(lcd->spi, (uint8_t *)i, 1, 1000);
+	lcd->pin_cs1->gpio->BSRRL = lcd->pin_cs1->pin_mask; // CS=1; disable
+	lcd_delay();
+}
+STATIC void lcd_write_reg_multi(pyb_lcd_obj_t *lcd, uint8_t reg, uint8_t count, char *i) {
+	lcd_delay();
+	lcd->pin_cs1->gpio->BSRRH = lcd->pin_cs1->pin_mask; // CS=0; enable
+	lcd->pin_a0->gpio->BSRRH = lcd->pin_a0->pin_mask;   // command
+	HAL_SPI_Transmit(lcd->spi, &reg, 1, 1000);
+	lcd->pin_cs1->gpio->BSRRL = lcd->pin_cs1->pin_mask;
+	lcd_delay();lcd_delay();lcd_delay();
+	lcd->pin_a0->gpio->BSRRL = lcd->pin_a0->pin_mask;
+	lcd->pin_cs1->gpio->BSRRH = lcd->pin_cs1->pin_mask;
+	for (uint8_t k = 0; k < count; k++)
+		HAL_SPI_Transmit(lcd->spi, (uint8_t*)i++, 1, 1000);
+	lcd->pin_cs1->gpio->BSRRL = lcd->pin_cs1->pin_mask; // CS=1; disable
+	lcd_delay();
+}
+
 STATIC void lcd_out(pyb_lcd_obj_t *lcd, int instr_data, uint8_t i) {
     lcd_delay();
     lcd->pin_cs1->gpio->BSRRH = lcd->pin_cs1->pin_mask; // CS=0; enable
@@ -123,9 +166,88 @@ STATIC void lcd_out(pyb_lcd_obj_t *lcd, int instr_data, uint8_t i) {
     HAL_SPI_Transmit(lcd->spi, &i, 1, 1000);
 }
 
+STATIC void lcd_set_window(pyb_lcd_obj_t *lcd, uint16_t x1, uint16_t x2, uint16_t y1, uint16_t y2) {
+	uint8_t buff[4];
+	buff[0] = x1 >> 8;
+	buff[1] = x1 & 0xFF;
+	buff[2] = x2 >> 8;
+	buff[3] = x2 & 0xFF;
+	lcd_write_reg_multi(lcd, 0x2A, 4, (char *)buff);
+	buff[0] = y1 >> 8;
+	buff[1] = y1 & 0xFF;
+	buff[2] = y2 >> 8;
+	buff[3] = y2 & 0xFF;
+	lcd_write_reg_multi(lcd, 0x2B, 4, (char *)buff);
+}
+
+STATIC void lcd_gram_start(pyb_lcd_obj_t *lcd) {
+	lcd_write_cmd(lcd, 0x2C);
+	lcd->pin_cs1->gpio->BSRRH = lcd->pin_cs1->pin_mask; // CS=0; enable
+	lcd->pin_a0->gpio->BSRRL = lcd->pin_a0->pin_mask;   // data
+}
+
+STATIC void lcd_gram_end(pyb_lcd_obj_t *lcd) {
+	lcd->pin_cs1->gpio->BSRRL = lcd->pin_cs1->pin_mask; // CS=1;
+}
+
+STATIC void lcd_clear_screen(pyb_lcd_obj_t *lcd, uint16_t colour) {
+	uint8_t a[8];
+	a[1] = colour & 0xFF;
+	a[0] = colour >> 8;
+	a[2] = colour & 0xFF;
+	a[3] = colour >> 8;
+	a[4] = colour & 0xFF;
+	a[5] = colour >> 8;
+	a[6] = colour & 0xFF;
+	a[7] = colour >> 8;
+	
+	lcd_set_window(lcd,0,239,1,319);
+	lcd_write_cmd(lcd, 0x2C);
+	lcd->pin_cs1->gpio->BSRRH = lcd->pin_cs1->pin_mask; // CS=0; enable
+	lcd->pin_a0->gpio->BSRRL = lcd->pin_a0->pin_mask;   // data
+	for (uint8_t i = 0; i < 240; i++){
+		for (uint16_t j = 0; j < 320; j++) {
+			HAL_SPI_Transmit(lcd->spi, a, 2, 1000);
+		}
+	}
+	lcd->pin_cs1->gpio->BSRRL = lcd->pin_cs1->pin_mask; // CS=1;
+}
+
 // write a string to the LCD at the current cursor location
 // output it straight away (doesn't use the pixel buffer)
 STATIC void lcd_write_strn(pyb_lcd_obj_t *lcd, const char *str, unsigned int len) {
+	uint16_t x1,x2,y1,y2;
+	x1 = lcd->line*LCD_CHAR_WID;
+	x2 = x1 + LCD_CHAR_WID-1;
+	y1 = lcd->column*LCD_CHAR_HIG;
+	y2 = y1 + LCD_CHAR_HIG-1;
+	uint16_t on = GREEN;
+	uint16_t off = BLUE;
+	for (unsigned int i = 0; i < len; i++){
+		lcd_set_window(lcd,x1,x2,y1,y2);
+		
+		lcd_gram_start(lcd);
+		
+		const uint8_t *chr_data = &font_petme128_8x8[(*str++ - 32) * 8];
+		
+        // loop over char data
+        for (uint j = 0; j < LCD_CHAR_WID; j++) {
+            uint vline_data = chr_data[j]; // one vertical column of the digit
+			for (uint8_t k = 0; k < LCD_CHAR_HIG; k++){
+				if (vline_data & 0x80)
+					HAL_SPI_Transmit(lcd->spi, ((uint8_t *)&on), 2, 1000);
+				else
+					HAL_SPI_Transmit(lcd->spi, ((uint8_t *)&off), 2, 1000);
+				vline_data <<= 1;
+			}
+		}
+		y1 += LCD_CHAR_WID;
+		y2 += LCD_CHAR_WID;
+		lcd->column++;		
+		lcd_gram_end(lcd);
+	}
+	
+	/*
     int redraw_min = lcd->line * LCD_CHAR_BUF_W + lcd->column;
     int redraw_max = redraw_min;
     for (; len > 0; len--, str++) {
@@ -186,6 +308,7 @@ STATIC void lcd_write_strn(pyb_lcd_obj_t *lcd, const char *str, unsigned int len
             lcd_out(lcd, LCD_DATA, chr_data[j]);
         }
     }
+	*/
 }
 
 /// \classmethod \constructor(skin_position)
@@ -235,7 +358,7 @@ STATIC mp_obj_t pyb_lcd_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp
         // SPI2 and SPI3 are on APB1
         spi_clock = HAL_RCC_GetPCLK1Freq();
     }
-    uint br_prescale = spi_clock / 1000000; //16000000; // datasheet says LCD can run at 20MHz, but we go for 16MHz
+    uint br_prescale = spi_clock / 2000000; //16000000; // datasheet says LCD can run at 20MHz, but we go for 16MHz
     if (br_prescale <= 2) { init->BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2; }
     else if (br_prescale <= 4) { init->BaudRatePrescaler = SPI_BAUDRATEPRESCALER_4; }
     else if (br_prescale <= 8) { init->BaudRatePrescaler = SPI_BAUDRATEPRESCALER_8; }
@@ -246,8 +369,8 @@ STATIC mp_obj_t pyb_lcd_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp
     else { init->BaudRatePrescaler = SPI_BAUDRATEPRESCALER_256; }
 
     // data is sent bigendian, latches on rising clock
-    init->CLKPolarity = SPI_POLARITY_HIGH;
-    init->CLKPhase = SPI_PHASE_2EDGE;
+    init->CLKPolarity = SPI_POLARITY_LOW;
+    init->CLKPhase = SPI_PHASE_1EDGE;
     init->Direction = SPI_DIRECTION_2LINES;
     init->DataSize = SPI_DATASIZE_8BIT;
     init->NSS = SPI_NSS_SOFT;
@@ -263,7 +386,7 @@ STATIC mp_obj_t pyb_lcd_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp
     lcd->pin_cs1->gpio->BSRRL = lcd->pin_cs1->pin_mask;
     lcd->pin_rst->gpio->BSRRL = lcd->pin_rst->pin_mask;
     lcd->pin_a0->gpio->BSRRL = lcd->pin_a0->pin_mask;
-    lcd->pin_bl->gpio->BSRRH = lcd->pin_bl->pin_mask;
+    lcd->pin_bl->gpio->BSRRL = lcd->pin_bl->pin_mask;
 
     // init the pins to be push/pull outputs
     GPIO_InitTypeDef GPIO_InitStructure;
@@ -282,6 +405,9 @@ STATIC mp_obj_t pyb_lcd_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp
 
     GPIO_InitStructure.Pin = lcd->pin_bl->pin_mask;
     HAL_GPIO_Init(lcd->pin_bl->gpio, &GPIO_InitStructure);
+	
+	lcd->line = 0;
+    lcd->column = 0;
 
     // init the LCD
     HAL_Delay(1); // wait a bit
@@ -289,7 +415,50 @@ STATIC mp_obj_t pyb_lcd_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp
     HAL_Delay(1); // wait for reset; 2us min
     lcd->pin_rst->gpio->BSRRL = lcd->pin_rst->pin_mask; // RST=1; enable
     HAL_Delay(1); // wait for reset; 2us min
-    lcd_out(lcd, LCD_INSTR, 0xa7); // ADC select, reverse
+	
+	lcd_write_cmd(lcd, 0x11);
+	HAL_Delay(100);
+	
+	lcd_write_reg_multi(lcd, 0xCF, 3, "\x00\xc3\x30");
+	lcd_write_reg_multi(lcd, 0xED, 4, "\x64\x03\x12\x81");
+    lcd_write_reg_multi(lcd, 0xE8, 3, "\x85\x10\x79");
+    lcd_write_reg_multi(lcd, 0xCB, 5, "\x39\x2c\x00\x34\x02");
+    lcd_write_reg(lcd, 0xF7, "\x20");
+    lcd_write_reg_multi(lcd, 0xEA, 2, "\x00\x00");
+    lcd_write_reg(lcd, 0xC0, "\x22");
+    lcd_write_reg(lcd, 0xC1, "\x11");
+    lcd_write_reg_multi(lcd, 0xC5, 2, "\x3d\x20");
+    lcd_write_reg_multi(lcd, 0xC7, 2, "\xbd\xaa"); 
+    lcd_write_reg(lcd, 0x36, "\x08"); 
+    lcd_write_reg(lcd, 0x3a, "\x55"); 
+    lcd_write_reg_multi(lcd, 0xB1,2, "\x00\x13"); 
+    lcd_write_reg_multi(lcd, 0xB6,2, "\x0a\xa2"); 
+    lcd_write_reg_multi(lcd, 0xF6,2, "\x01\x30"); 
+    lcd_write_reg(lcd, 0xF2, "x00");
+	
+    lcd_write_cmd(lcd, 0x11);
+	HAL_Delay(120);
+	lcd_write_cmd(lcd, 0x29);
+	
+	lcd_clear_screen(lcd,MAGENTA);
+	/*
+	HAL_Delay(500);
+	
+	lcd_clear_screen(lcd,MAGENTA);
+	
+	HAL_Delay(500);
+	
+	lcd_clear_screen(lcd,CYAN);
+	
+	HAL_Delay(500);
+	
+	lcd_clear_screen(lcd,YELLOW);
+	
+	lcd_write_strn(lcd, "HELLOO", 6);
+	*/
+    
+	/*
+    lcd_out(lcd, LCD_INSTR, 0xa6); // ADC select, reverse
     lcd_out(lcd, LCD_INSTR, 0xc0); // common output mode select, normal (this flips the display)
     lcd_out(lcd, LCD_INSTR, 0xa2); // LCD bias set, 1/9 bias
     lcd_out(lcd, LCD_INSTR, 0x40); // display start line set, 0
@@ -326,6 +495,7 @@ STATIC mp_obj_t pyb_lcd_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp
     // clear local pixel buffer
     memset(lcd->pix_buf, 0, LCD_PIX_BUF_BYTE_SIZE);
     memset(lcd->pix_buf2, 0, LCD_PIX_BUF_BYTE_SIZE);
+*/
 
     return lcd;
 }
