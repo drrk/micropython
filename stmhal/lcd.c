@@ -34,6 +34,7 @@
 #if MICROPY_HW_HAS_LCD
 
 #include "pin.h"
+#include "gfx.h"
 #include "genhdr/pins.h"
 #include "bufhelper.h"
 #include "spi.h"
@@ -85,6 +86,16 @@
 #define LCD_PIX_BUF_W (128)
 #define LCD_PIX_BUF_H (32)
 #define LCD_PIX_BUF_BYTE_SIZE (LCD_PIX_BUF_W * LCD_PIX_BUF_H / 8)
+
+systemticks_t gfxSystemTicks(void)
+{
+	return HAL_GetTick();
+}
+ 
+systemticks_t gfxMillisecondsToTicks(delaytime_t ms)
+{
+	return ms;
+}
 
 typedef struct _pyb_lcd_obj_t {
     mp_obj_base_t base;
@@ -197,12 +208,15 @@ STATIC mp_obj_t pyb_lcd_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp
     mp_arg_check_num(n_args, n_kw, 1, 1, false);
 
     // get LCD position
-    const char *lcd_id = mp_obj_str_get_str(args[0]);
+    //const char *lcd_id = mp_obj_str_get_str(args[0]);
 
     // create lcd object
     pyb_lcd_obj_t *lcd = m_new_obj(pyb_lcd_obj_t);
     lcd->base.type = &pyb_lcd_type;
-
+	
+	gfxInit();
+	
+/*
     // configure pins
     // TODO accept an SPI object and pin objects for full customisation
     if ((lcd_id[0] | 0x20) == 'x' && lcd_id[1] == '\0') {
@@ -318,7 +332,7 @@ STATIC mp_obj_t pyb_lcd_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp
     // clear local pixel buffer
     memset(lcd->pix_buf, 0, LCD_PIX_BUF_BYTE_SIZE);
     memset(lcd->pix_buf2, 0, LCD_PIX_BUF_BYTE_SIZE);
-
+*/
     return lcd;
 }
 

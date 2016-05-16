@@ -8,6 +8,11 @@ endif
 # If the build directory is not given, make it reflect the board name.
 BUILD ?= build-$(BOARD)
 
+# uGFX stuff
+GFXLIB=../../ugfx
+include $(GFXLIB)/gfx.mk
+include $(GFXLIB)/drivers/gdisp/ILI9341/driver.mk
+
 include ../py/mkenv.mk
 -include mpconfigport.mk
 include boards/$(BOARD)/mpconfigboard.mk
@@ -43,12 +48,17 @@ INC += -I$(USBDEV_DIR)/core/inc -I$(USBDEV_DIR)/class/inc
 INC += -I../lib/mp-readline
 INC += -I../lib/netutils
 INC += -I../lib/timeutils
+INC += $(foreach d, $(GFXINC), -I$d)
+
+
+$(info $$INC is [${INC}])
 
 CFLAGS_CORTEX_M = -mthumb -mabi=aapcs-linux -mfpu=fpv4-sp-d16 -mfloat-abi=hard -fsingle-precision-constant -Wdouble-promotion
 CFLAGS_MCU_f4 = $(CFLAGS_CORTEX_M) -mtune=cortex-m4 -mcpu=cortex-m4 -DMCU_SERIES_F4
 CFLAGS_MCU_f7 = $(CFLAGS_CORTEX_M) -mtune=cortex-m7 -mcpu=cortex-m7 -DMCU_SERIES_F7
 
-CFLAGS = $(INC) -Wall -Wpointer-arith -Werror -ansi -std=gnu99 -nostdlib $(CFLAGS_MOD)
+CFLAGS = $(INC) -Wall -Wpointer-arith -ansi -std=gnu99 -nostdlib $(CFLAGS_MOD)
+#CFLAGS = $(INC) -Wall -Wpointer-arith -Werror -ansi -std=gnu99 -nostdlib $(CFLAGS_MOD)
 CFLAGS += -D$(CMSIS_MCU)
 CFLAGS += $(CFLAGS_MCU_$(MCU_SERIES))
 CFLAGS += $(COPT)
@@ -161,6 +171,7 @@ SRC_C = \
 	servo.c \
 	dac.c \
 	adc.c \
+	$(GFXSRC) \
 	$(wildcard boards/$(BOARD)/*.c)
 
 SRC_O = \
