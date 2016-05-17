@@ -45,16 +45,17 @@
 // Options that (should where relevant) apply to all operating systems
 //    #define GFX_NO_INLINE                            FALSE
 //    #define GFX_COMPILER                             GFX_COMPILER_UNKNOWN
-//    #define GFX_CPU                                  GFX_CPU_UNKNOWN
+    #define GFX_CPU                                  GFX_CPU_CORTEX_M4_FP
+	#define CORTEX_USE_FPU                           TRUE
 //    #define GFX_CPU_NO_ALIGNMENT_FAULTS              FALSE
 //    #define GFX_CPU_ENDIAN                           GFX_CPU_ENDIAN_UNKNOWN
-//    #define GFX_OS_HEAP_SIZE                         0
+    #define GFX_OS_HEAP_SIZE                         16384
 //    #define GFX_OS_NO_INIT                           FALSE
     #define GFX_OS_INIT_NO_WARNING                   TRUE
 //    #define GFX_OS_PRE_INIT_FUNCTION                 myHardwareInitRoutine
 //    #define GFX_OS_EXTRA_INIT_FUNCTION               myOSInitRoutine
 //    #define GFX_OS_EXTRA_DEINIT_FUNCTION             myOSDeInitRoutine
-    #define GFX_EMULATE_MALLOC                       TRUE
+//    #define GFX_EMULATE_MALLOC                       TRUE
 
 
 ///////////////////////////////////////////////////////////////////////////

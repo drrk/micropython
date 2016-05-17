@@ -15,14 +15,14 @@
 #include "genhdr/pins.h"
 #include "spi.h"
 
-#define GPIO_PORT_CS GPIOA
-#define GPIO_PIN_CS (1<<15)
-#define GPIO_PORT_RST GPIOE
-#define GPIO_PIN_RST (1<<1)
-#define GPIO_PORT_A0 GPIOD
-#define GPIO_PIN_A0 (1<<7)
-#define GPIO_PORT_BL GPIOE
-#define GPIO_PIN_BL (1<<5)
+#define GPIO_PORT_CS GPIOB
+#define GPIO_PIN_CS (1<<8)
+#define GPIO_PORT_RST GPIOB
+#define GPIO_PIN_RST (1<<7)
+#define GPIO_PORT_A0 GPIOE
+#define GPIO_PIN_A0 (1<<0)
+#define GPIO_PORT_BL GPIOB
+#define GPIO_PIN_BL (1<<9)
 
 SPI_HandleTypeDef ili_spi;
 
@@ -56,8 +56,8 @@ static GFXINLINE void init_board(GDisplay *g) {
     else { ili_spi.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_256; }
 
     // data is sent bigendian, latches on rising clock
-    ili_spi.Init.CLKPolarity = SPI_POLARITY_HIGH;
-    ili_spi.Init.CLKPhase = SPI_PHASE_2EDGE;
+    ili_spi.Init.CLKPolarity = SPI_POLARITY_LOW;
+    ili_spi.Init.CLKPhase = SPI_PHASE_1EDGE;
     ili_spi.Init.Direction = SPI_DIRECTION_2LINES;
     ili_spi.Init.DataSize = SPI_DATASIZE_8BIT;
     ili_spi.Init.NSS = SPI_NSS_SOFT;
@@ -65,6 +65,7 @@ static GFXINLINE void init_board(GDisplay *g) {
     ili_spi.Init.TIMode = SPI_TIMODE_DISABLED;
     ili_spi.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLED;
     ili_spi.Init.CRCPolynomial = 0;
+
 
     // init the SPI bus
     spi_init(&ili_spi, false);

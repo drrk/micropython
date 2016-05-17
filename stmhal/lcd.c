@@ -215,6 +215,7 @@ STATIC mp_obj_t pyb_lcd_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp
     lcd->base.type = &pyb_lcd_type;
 	
 	gfxInit();
+	gdispFillArea(20, 20, 50, 50, 0x808080);
 	
 /*
     // configure pins
