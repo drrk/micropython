@@ -45,7 +45,7 @@ static GFXINLINE void init_board(GDisplay *g) {
         // SPI2 and SPI3 are on APB1
         spi_clock = HAL_RCC_GetPCLK1Freq();
     //}
-    uint br_prescale = spi_clock / 1000000; //16000000; // datasheet says LCD can run at 20MHz, but we go for 16MHz
+    uint br_prescale = spi_clock / 10000000; //16000000; // datasheet says LCD can run at 20MHz, but we go for 16MHz
     if (br_prescale <= 2) { ili_spi.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2; }
     else if (br_prescale <= 4) { ili_spi.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_4; }
     else if (br_prescale <= 8) { ili_spi.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_8; }
@@ -105,9 +105,9 @@ static GFXINLINE void setpin_reset(GDisplay *g, bool_t state) {
 	(void) g;
 	if(state) {
 		// reset lcd
-		GPIO_PORT_CS->BSRRH = GPIO_PIN_CS;
+		GPIO_PORT_RST->BSRRH = GPIO_PIN_RST;
 	} else {
-		GPIO_PORT_CS->BSRRL = GPIO_PIN_CS;
+		GPIO_PORT_RST->BSRRL = GPIO_PIN_RST;
 	}
 }
 
@@ -130,6 +130,7 @@ static GFXINLINE void acquire_bus(GDisplay *g) {
 
 static GFXINLINE void release_bus(GDisplay *g) {
 	(void) g;
+	GPIO_PORT_CS->BSRRL = GPIO_PIN_CS;  //CS high
 }
 
 static GFXINLINE void write_index(GDisplay *g, uint16_t index) {
@@ -138,7 +139,7 @@ static GFXINLINE void write_index(GDisplay *g, uint16_t index) {
 	GPIO_PORT_CS->BSRRH = GPIO_PIN_CS;  //CS low
 	GPIO_PORT_A0->BSRRH = GPIO_PIN_A0;  //CMD low
 	HAL_SPI_Transmit(&ili_spi, &index, 1, 1000);
-	GPIO_PORT_CS->BSRRL = GPIO_PIN_CS;  //CS high
+//	GPIO_PORT_CS->BSRRL = GPIO_PIN_CS;  //CS high
 	GPIO_PORT_A0->BSRRL = GPIO_PIN_A0;  //CMD high
 }
 

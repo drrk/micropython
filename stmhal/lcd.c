@@ -215,7 +215,7 @@ STATIC mp_obj_t pyb_lcd_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp
     lcd->base.type = &pyb_lcd_type;
 	
 	gfxInit();
-	gdispFillArea(20, 20, 50, 50, 0x808080);
+	//gdispFillArea(20, 20, 50, 50, 0x808080);
 	
 /*
     // configure pins
@@ -400,7 +400,10 @@ STATIC mp_obj_t pyb_lcd_write(mp_obj_t self_in, mp_obj_t str) {
     pyb_lcd_obj_t *self = self_in;
     mp_uint_t len;
     const char *data = mp_obj_str_get_data(str, &len);
-    lcd_write_strn(self, data, len);
+    //lcd_write_strn(self, data, len);
+	font_t font12 = gdispOpenFont("DejaVuSans12");
+	gdispDrawString(60, 60, data, font12, HTML2COLOR(0xFFFF00));
+	gdispCloseFont(font12);
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(pyb_lcd_write_obj, pyb_lcd_write);
