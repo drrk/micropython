@@ -9,28 +9,19 @@
 #define _GDISP_LLD_BOARD_H
 
 #include STM32_HAL_H
-#include "py/nlr.h"
-#include "py/runtime.h"
+#include "py/mphal.h"
 #include "pin.h"
 #include "genhdr/pins.h"
 #include "spi.h"
 
-#define GPIO_PORT_CS GPIOB
-#define GPIO_PIN_CS (1<<8)
-#define GPIO_PORT_RST GPIOB
-#define GPIO_PIN_RST (1<<7)
-#define GPIO_PORT_A0 GPIOE
-#define GPIO_PIN_A0 (1<<0)
-#define GPIO_PORT_BL GPIOB
-#define GPIO_PIN_BL (1<<9)
 
 SPI_HandleTypeDef ili_spi;
 
 static GFXINLINE void init_board(GDisplay *g) {
 	// As we are not using multiple displays we set g->board to NULL as we don't use it.
 
-	
-	ili_spi = SPIHandle2;
+	#if MICROPY_HW_UGFX_INTERFACE == SPI
+	ili_spi = MICROPY_HW_UGFX_SPI;
 	
 	// init the SPI bus
     ili_spi.Init.Mode = SPI_MODE_MASTER;
@@ -38,14 +29,14 @@ static GFXINLINE void init_board(GDisplay *g) {
     // compute the baudrate prescaler from the desired baudrate
     // select a prescaler that yields at most the desired baudrate
     uint spi_clock;
-    //if (ili_spi->Instance == SPI1) {
-    //    // SPI1 is on APB2
-    //    spi_clock = HAL_RCC_GetPCLK2Freq();
-    //} else {
+    if ((ili_spi.Instance == SPI1) || (ili_spi.Instance == SPI4)) {
+        // SPI1 is on APB2
+        spi_clock = HAL_RCC_GetPCLK2Freq();
+    } else {
         // SPI2 and SPI3 are on APB1
         spi_clock = HAL_RCC_GetPCLK1Freq();
-    //}
-    uint br_prescale = spi_clock / 10000000; //16000000; // datasheet says LCD can run at 20MHz, but we go for 16MHz
+    }
+    uint br_prescale = spi_clock / 10000000;
     if (br_prescale <= 2) { ili_spi.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2; }
     else if (br_prescale <= 4) { ili_spi.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_4; }
     else if (br_prescale <= 8) { ili_spi.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_8; }
@@ -71,10 +62,10 @@ static GFXINLINE void init_board(GDisplay *g) {
     spi_init(&ili_spi, false);
 
     // set the pins to default values
-    GPIO_PORT_CS->BSRRL = GPIO_PIN_CS;
-    GPIO_PORT_RST->BSRRL = GPIO_PIN_RST;
-    GPIO_PORT_A0->BSRRL = GPIO_PIN_A0;
-    GPIO_PORT_BL->BSRRH = GPIO_PIN_BL;
+    GPIO_set_pin(MICROPY_HW_UGFX_PORT_CS, MICROPY_HW_UGFX_PIN_CS);
+    GPIO_set_pin(MICROPY_HW_UGFX_PORT_RST, MICROPY_HW_UGFX_PIN_RST);
+    GPIO_set_pin(MICROPY_HW_UGFX_PORT_A0, MICROPY_HW_UGFX_PIN_A0);
+    GPIO_clear_pin(MICROPY_HW_UGFX_PORT_BL, MICROPY_HW_UGFX_PIN_BL);
 
     // init the pins to be push/pull outputs
     GPIO_InitTypeDef GPIO_InitStructure;
@@ -82,17 +73,27 @@ static GFXINLINE void init_board(GDisplay *g) {
     GPIO_InitStructure.Speed = GPIO_SPEED_HIGH;
     GPIO_InitStructure.Pull = GPIO_NOPULL;
 
-    GPIO_InitStructure.Pin = GPIO_PIN_CS;
-    HAL_GPIO_Init(GPIO_PORT_CS, &GPIO_InitStructure);
+    GPIO_InitStructure.Pin = MICROPY_HW_UGFX_PIN_CS;
+    HAL_GPIO_Init(MICROPY_HW_UGFX_PORT_CS, &GPIO_InitStructure);
 
-    GPIO_InitStructure.Pin = GPIO_PIN_RST;
-    HAL_GPIO_Init(GPIO_PORT_RST, &GPIO_InitStructure);
+    GPIO_InitStructure.Pin = MICROPY_HW_UGFX_PIN_RST;
+    HAL_GPIO_Init(MICROPY_HW_UGFX_PORT_RST, &GPIO_InitStructure);
 
-    GPIO_InitStructure.Pin = GPIO_PIN_A0;
-    HAL_GPIO_Init(GPIO_PORT_A0, &GPIO_InitStructure);
+    GPIO_InitStructure.Pin = MICROPY_HW_UGFX_PIN_A0;
+    HAL_GPIO_Init(MICROPY_HW_UGFX_PORT_A0, &GPIO_InitStructure);
 
-    GPIO_InitStructure.Pin = GPIO_PIN_BL;
-    HAL_GPIO_Init(GPIO_PORT_BL, &GPIO_InitStructure);
+    GPIO_InitStructure.Pin = MICROPY_HW_UGFX_PIN_BL;
+    HAL_GPIO_Init(MICROPY_HW_UGFX_PORT_BL, &GPIO_InitStructure);
+	
+	#else
+		#error "Parallel not yet implemented"
+	#endif
+	
+	#ifdef MICROPY_HW_UGFX_PIN_MODE
+	GPIO_InitStructure.Pin = MICROPY_HW_UGFX_PIN_MODE;
+	HAL_GPIO_Init(MICROPY_HW_UGFX_PORT_MODE, &GPIO_InitStructure);
+	MICROPY_HW_UGFX_SET_MODE;
+	#endif
 
 	
 }
@@ -105,9 +106,9 @@ static GFXINLINE void setpin_reset(GDisplay *g, bool_t state) {
 	(void) g;
 	if(state) {
 		// reset lcd
-		GPIO_PORT_RST->BSRRH = GPIO_PIN_RST;
+		GPIO_clear_pin(MICROPY_HW_UGFX_PORT_RST, MICROPY_HW_UGFX_PIN_RST);
 	} else {
-		GPIO_PORT_RST->BSRRL = GPIO_PIN_RST;
+		GPIO_set_pin(MICROPY_HW_UGFX_PORT_RST, MICROPY_HW_UGFX_PIN_RST);
 	}
 }
 
@@ -117,10 +118,10 @@ static GFXINLINE void set_backlight(GDisplay *g, uint8_t percent) {
 	// TODO: can probably pwm this
 	if(percent) {
 		// turn back light on
-		GPIO_PORT_BL->BSRRH = GPIO_PIN_BL;
+		GPIO_set_pin(MICROPY_HW_UGFX_PORT_BL, MICROPY_HW_UGFX_PIN_BL);
 	} else {
 		// turn off
-		GPIO_PORT_BL->BSRRH = GPIO_PIN_BL;
+		GPIO_clear_pin(MICROPY_HW_UGFX_PORT_BL, MICROPY_HW_UGFX_PIN_BL);
 	}
 }
 
@@ -130,17 +131,16 @@ static GFXINLINE void acquire_bus(GDisplay *g) {
 
 static GFXINLINE void release_bus(GDisplay *g) {
 	(void) g;
-	GPIO_PORT_CS->BSRRL = GPIO_PIN_CS;  //CS high
+	GPIO_set_pin(MICROPY_HW_UGFX_PORT_CS, MICROPY_HW_UGFX_PIN_CS);  //CS high
 }
 
 static GFXINLINE void write_index(GDisplay *g, uint16_t index) {
 	(void) g;
 	
-	GPIO_PORT_CS->BSRRH = GPIO_PIN_CS;  //CS low
-	GPIO_PORT_A0->BSRRH = GPIO_PIN_A0;  //CMD low
+	GPIO_clear_pin(MICROPY_HW_UGFX_PORT_CS, MICROPY_HW_UGFX_PIN_CS);  //CS low
+	GPIO_clear_pin(MICROPY_HW_UGFX_PORT_A0, MICROPY_HW_UGFX_PIN_A0);  //CMD low
 	HAL_SPI_Transmit(&ili_spi, &index, 1, 1000);
-//	GPIO_PORT_CS->BSRRL = GPIO_PIN_CS;  //CS high
-	GPIO_PORT_A0->BSRRL = GPIO_PIN_A0;  //CMD high
+	GPIO_set_pin(MICROPY_HW_UGFX_PORT_A0, MICROPY_HW_UGFX_PIN_A0);  //CMD high
 }
 
 static GFXINLINE void write_data(GDisplay *g, uint16_t data) {

@@ -26,6 +26,7 @@
 
 #include <stdio.h>
 #include <string.h>
+
 #include STM32_HAL_H
 
 #include "py/nlr.h"
@@ -35,6 +36,7 @@
 
 #include "pin.h"
 #include "gfx.h"
+
 #include "genhdr/pins.h"
 #include "bufhelper.h"
 #include "spi.h"
@@ -87,15 +89,7 @@
 #define LCD_PIX_BUF_H (32)
 #define LCD_PIX_BUF_BYTE_SIZE (LCD_PIX_BUF_W * LCD_PIX_BUF_H / 8)
 
-systemticks_t gfxSystemTicks(void)
-{
-	return HAL_GetTick();
-}
- 
-systemticks_t gfxMillisecondsToTicks(delaytime_t ms)
-{
-	return ms;
-}
+
 
 typedef struct _pyb_lcd_obj_t {
     mp_obj_base_t base;
@@ -133,6 +127,40 @@ STATIC void lcd_out(pyb_lcd_obj_t *lcd, int instr_data, uint8_t i) {
     lcd_delay();
     HAL_SPI_Transmit(lcd->spi, &i, 1, 1000);
 }
+
+
+static const point data[5] = {
+    { -40, -40 },
+    { 70, 40 },
+    { 140, 60 },
+    { 210, 60 },
+    { 280, 200 }
+};
+
+// A graph styling
+static GGraphStyle GraphStyle1 = {
+    { GGRAPH_POINT_DOT, 0, Blue },          // Point
+    { GGRAPH_LINE_NONE, 2, Gray },          // Line
+    { GGRAPH_LINE_SOLID, 0, White },        // X axis
+    { GGRAPH_LINE_SOLID, 0, White },        // Y axis
+    { GGRAPH_LINE_DASH, 5, Gray, 50 },      // X grid
+    { GGRAPH_LINE_DOT, 7, Yellow, 50 },     // Y grid
+    GWIN_GRAPH_STYLE_POSITIVE_AXIS_ARROWS   // Flags
+};
+
+// Another graph styling 
+static const GGraphStyle GraphStyle2 = {
+    { GGRAPH_POINT_SQUARE, 5, Red },        // Point
+    { GGRAPH_LINE_DOT, 2, Pink },           // Line
+    { GGRAPH_LINE_SOLID, 0, White },        // X axis
+    { GGRAPH_LINE_SOLID, 0, White },        // Y axis
+    { GGRAPH_LINE_DASH, 5, Gray, 50 },      // X grid
+    { GGRAPH_LINE_DOT, 7, Yellow, 50 },     // Y grid
+    GWIN_GRAPH_STYLE_POSITIVE_AXIS_ARROWS   // Flags
+};
+
+
+
 
 // write a string to the LCD at the current cursor location
 // output it straight away (doesn't use the pixel buffer)
@@ -216,6 +244,56 @@ STATIC mp_obj_t pyb_lcd_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp
 	
 	gfxInit();
 	//gdispFillArea(20, 20, 50, 50, 0x808080);
+	
+	
+	
+	
+	GHandle     gh;
+    uint16_t    i;
+ 
+ 
+    // Create the graph window
+    {
+        GWindowInit wi;
+ 
+        wi.show = TRUE;
+        wi.x = wi.y = 0;
+        wi.width = gdispGetWidth();
+        wi.height = gdispGetHeight();
+        gh = gwinGraphCreate(0, &wi);
+    }
+ 
+    // Set the graph origin and style
+    gwinGraphSetOrigin(gh, gwinGetWidth(gh)/2, gwinGetHeight(gh)/2);
+    gwinGraphSetStyle(gh, &GraphStyle1);
+    gwinGraphDrawAxis(gh);
+ 
+    // Draw a sine wave
+    for(i = 0; i < gwinGetWidth(gh); i++) {
+        gwinGraphDrawPoint(gh, i-gwinGetWidth(gh)/2, ffsin(i*2)/256);//80*fsin(8*0.2*i));
+    }
+ 
+    // Modify the style
+    gwinGraphStartSet(gh);
+    GraphStyle1.point.color = Green;
+    gwinGraphSetStyle(gh, &GraphStyle1);
+ 
+    // Draw a different sine wave
+    for(i = 0; i < gwinGetWidth(gh)*5; i++) {
+        gwinGraphDrawPoint(gh, i/5-gwinGetWidth(gh)/2, ffsin(i+50*2)/400);;//95*fsin(8*0.2*i));
+    }
+
+    // Change to a completely different style
+    gwinGraphStartSet(gh);
+    gwinGraphSetStyle(gh, &GraphStyle2);
+
+    // Draw a set of points
+    gwinGraphDrawPoints(gh, data, sizeof(data)/sizeof(data[0]));
+ 
+
+	
+	
+	
 	
 /*
     // configure pins
@@ -401,6 +479,7 @@ STATIC mp_obj_t pyb_lcd_write(mp_obj_t self_in, mp_obj_t str) {
     mp_uint_t len;
     const char *data = mp_obj_str_get_data(str, &len);
     //lcd_write_strn(self, data, len);
+	//gwinPrintf(GW1,data);
 	font_t font12 = gdispOpenFont("DejaVuSans12");
 	gdispDrawString(60, 60, data, font12, HTML2COLOR(0xFFFF00));
 	gdispCloseFont(font12);

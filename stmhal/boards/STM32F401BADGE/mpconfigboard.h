@@ -10,11 +10,40 @@
 #define MICROPY_HW_ENABLE_RTC       (1)
 #define MICROPY_HW_ENABLE_TIMER     (1)
 #define MICROPY_HW_ENABLE_SERVO     (1)
+#define MICROPY_HW_HAS_UGFX         (1)
 
 #define MICROPY_BOARD_EARLY_INIT    STM32F4BADGE_board_early_init
 void STM32F4BADGE_board_early_init(void);
 
 
+// uGFX PinDefs
+#define MICROPY_HW_UGFX_INTERFACE SPI
+
+//used for selecting SPI/parallel mode
+//#define MICROPY_HW_UGFX_PORT_MODE GPIOB
+//#define MICROPY_HW_UGFX_PIN_MODE GPIO_PIN_7
+
+#if MICROPY_HW_UGFX_INTERFACE == SPI
+
+	#define MICROPY_HW_UGFX_PORT_CS GPIOB
+	#define MICROPY_HW_UGFX_PIN_CS GPIO_PIN_8
+	#define MICROPY_HW_UGFX_PORT_RST GPIOB
+	#define MICROPY_HW_UGFX_PIN_RST GPIO_PIN_7
+	#define MICROPY_HW_UGFX_PORT_A0 GPIOE
+	#define MICROPY_HW_UGFX_PIN_A0 GPIO_PIN_0
+	#define MICROPY_HW_UGFX_PORT_BL GPIOB
+	#define MICROPY_HW_UGFX_PIN_BL GPIO_PIN_9
+	
+	#define MICROPY_HW_UGFX_SPI SPIHandle2
+	
+	#define MICROPY_HW_UGFX_SET_MODE GPIO_set_pin(self->gpio, self->pin_mask)
+
+#elif MICROPY_HW_UGFX_INTERFACE == PARALLEL
+
+
+	#define MICROPY_HW_UGFX_SET_MODE GPIO_clear_pin(self->gpio, self->pin_mask)
+
+#endif
 
 // HSE is 16MHz, CPU freq set to 84MHz
 #define MICROPY_HW_CLK_PLLM (16)

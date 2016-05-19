@@ -77,7 +77,7 @@
 #define GDISP_NEED_CONTROL                           TRUE
 //#define GDISP_NEED_QUERY                             FALSE
 //#define GDISP_NEED_MULTITHREAD                       FALSE
-//#define GDISP_NEED_STREAMING                         FALSE
+#define GDISP_NEED_STREAMING                         TRUE
 #define GDISP_NEED_TEXT                              TRUE
     #define GDISP_NEED_TEXT_WORDWRAP                 TRUE
 //    #define GDISP_NEED_ANTIALIAS                     FALSE
@@ -174,53 +174,53 @@
 ///////////////////////////////////////////////////////////////////////////
 // GWIN                                                                  //
 ///////////////////////////////////////////////////////////////////////////
-//#define GFX_USE_GWIN                                 FALSE
+#define GFX_USE_GWIN                                 TRUE
 
-//#define GWIN_NEED_WINDOWMANAGER                      FALSE
+#define GWIN_NEED_WINDOWMANAGER                      TRUE
 //    #define GWIN_REDRAW_IMMEDIATE                    FALSE
 //    #define GWIN_REDRAW_SINGLEOP                     FALSE
 //    #define GWIN_NEED_FLASHING                       FALSE
 //        #define GWIN_FLASHING_PERIOD                 250
 
-//#define GWIN_NEED_CONSOLE                            FALSE
+//#define GWIN_NEED_CONSOLE                            TRUE
 //    #define GWIN_CONSOLE_USE_HISTORY                 FALSE
 //        #define GWIN_CONSOLE_HISTORY_AVERAGING       FALSE
 //        #define GWIN_CONSOLE_HISTORY_ATCREATE        FALSE
 //    #define GWIN_CONSOLE_ESCSEQ                      FALSE
 //    #define GWIN_CONSOLE_USE_BASESTREAM              FALSE
 //    #define GWIN_CONSOLE_USE_FLOAT                   FALSE
-//#define GWIN_NEED_GRAPH                              FALSE
+#define GWIN_NEED_GRAPH                              TRUE
 //#define GWIN_NEED_GL3D                               FALSE
 
-//#define GWIN_NEED_WIDGET                             FALSE
+//#define GWIN_NEED_WIDGET                             TRUE
 //#define GWIN_FOCUS_HIGHLIGHT_WIDTH                   1
-//    #define GWIN_NEED_LABEL                          FALSE
-//        #define GWIN_LABEL_ATTRIBUTE                 FALSE
-//    #define GWIN_NEED_BUTTON                         FALSE
-//        #define GWIN_BUTTON_LAZY_RELEASE             FALSE
-//    #define GWIN_NEED_SLIDER                         FALSE
-//        #define GWIN_SLIDER_NOSNAP                   FALSE
+//    #define GWIN_NEED_LABEL                          TRUE
+//        #define GWIN_LABEL_ATTRIBUTE                 TRUE
+//    #define GWIN_NEED_BUTTON                         TRUE
+//        #define GWIN_BUTTON_LAZY_RELEASE             TRUE
+//    #define GWIN_NEED_SLIDER                         TRUE
+//        #define GWIN_SLIDER_NOSNAP                   TRUE
 //        #define GWIN_SLIDER_DEAD_BAND                5
 //        #define GWIN_SLIDER_TOGGLE_INC               20
-//    #define GWIN_NEED_CHECKBOX                       FALSE
-//    #define GWIN_NEED_IMAGE                          FALSE
-//        #define GWIN_NEED_IMAGE_ANIMATION            FALSE
-//    #define GWIN_NEED_RADIO                          FALSE
-//    #define GWIN_NEED_LIST                           FALSE
-//        #define GWIN_NEED_LIST_IMAGES                FALSE
-//    #define GWIN_NEED_PROGRESSBAR                    FALSE
-//        #define GWIN_PROGRESSBAR_AUTO                FALSE
-//    #define GWIN_NEED_KEYBOARD                       FALSE
+//    #define GWIN_NEED_CHECKBOX                       TRUE
+//    #define GWIN_NEED_IMAGE                          TRUE
+//        #define GWIN_NEED_IMAGE_ANIMATION            TRUE
+//    #define GWIN_NEED_RADIO                          TRUE
+//    #define GWIN_NEED_LIST                           TRUE
+//        #define GWIN_NEED_LIST_IMAGES                TRUE
+//    #define GWIN_NEED_PROGRESSBAR                    TRUE
+//        #define GWIN_PROGRESSBAR_AUTO                TRUE
+//    #define GWIN_NEED_KEYBOARD                       TRUE
 //        #define GWIN_KEYBOARD_DEFAULT_LAYOUT         VirtualKeyboard_English1
 //        #define GWIN_NEED_KEYBOARD_ENGLISH1          TRUE
-//    #define GWIN_NEED_TEXTEDIT                       FALSE
-//    #define GWIN_FLAT_STYLING                        FALSE
-//    #define GWIN_WIDGET_TAGS                         FALSE
+//    #define GWIN_NEED_TEXTEDIT                       TRUE
+//    #define GWIN_FLAT_STYLING                        TRUE
+//    #define GWIN_WIDGET_TAGS                         TRUE
 
-//#define GWIN_NEED_CONTAINERS                         FALSE
-//    #define GWIN_NEED_CONTAINER                      FALSE
-//    #define GWIN_NEED_FRAME                          FALSE
-//    #define GWIN_NEED_TABSET                         FALSE
+//#define GWIN_NEED_CONTAINERS                         TRUE
+//    #define GWIN_NEED_CONTAINER                      TRUE
+//    #define GWIN_NEED_FRAME                          TRUE
+//    #define GWIN_NEED_TABSET                         TRUE
 //        #define GWIN_TABSET_TABHEIGHT                18
 
 
@@ -262,7 +262,7 @@
 ///////////////////////////////////////////////////////////////////////////
 // GINPUT                                                                //
 ///////////////////////////////////////////////////////////////////////////
-//#define GFX_USE_GINPUT                               FALSE
+//#define GFX_USE_GINPUT                               TRUE
 
 //#define GINPUT_NEED_MOUSE                            FALSE
 //    #define GINPUT_TOUCH_STARTRAW                    FALSE
@@ -324,12 +324,12 @@
 ///////////////////////////////////////////////////////////////////////////
 // GMISC                                                                 //
 ///////////////////////////////////////////////////////////////////////////
-//#define GFX_USE_GMISC                                FALSE
+#define GFX_USE_GMISC                                TRUE
 
 //#define GMISC_NEED_ARRAYOPS                          FALSE
-//#define GMISC_NEED_FASTTRIG                          FALSE
-//#define GMISC_NEED_FIXEDTRIG                         FALSE
-//#define GMISC_NEED_INVSQRT                           FALSE
+//#define GMISC_NEED_FASTTRIG                          TRUE
+#define GMISC_NEED_FIXEDTRIG                         TRUE
+#define GMISC_NEED_INVSQRT                           TRUE
 //    #define GMISC_INVSQRT_MIXED_ENDIAN               FALSE
 //    #define GMISC_INVSQRT_REAL_SLOW                  FALSE
 //#define GMISC_NEED_MATRIXFLOAT2D                     FALSE

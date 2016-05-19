@@ -204,6 +204,17 @@ Q(sendbreak)
 Q(RTS)
 Q(CTS)
 
+// for uGFX
+#if MICROPY_HW_HAS_UGFX
+Q(UGFX)
+Q(RED)
+Q(BLUE)
+Q(GREEN)
+Q(BLACK)
+Q(WHITE)
+Q(YELLOW)
+#endif
+
 // for CAN class
 #if MICROPY_HW_ENABLE_CAN
 Q(CAN)
