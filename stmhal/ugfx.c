@@ -58,7 +58,7 @@
 ///     lcd.write('Hello world!\n',10,10)     # print text to the screen
 ///
 
-
+font_t default_font;
 
 systemticks_t gfxSystemTicks(void)
 {
@@ -72,6 +72,8 @@ systemticks_t gfxMillisecondsToTicks(delaytime_t ms)
 
 typedef struct _pyb_ugfx_obj_t {
     mp_obj_base_t base;
+	
+	
 
     // hardware control for the LCD
 	// configured in headers - makes things faster
@@ -98,6 +100,9 @@ STATIC mp_obj_t pyb_ugfx_make_new(const mp_obj_type_t *type, mp_uint_t n_args, m
     // create lcd object
     pyb_ugfx_obj_t *ugfx = m_new_obj(pyb_ugfx_obj_t);
     ugfx->base.type = &pyb_ugfx_type;
+	
+	default_font = gdispOpenFont("ui2");  //TODO: allow to be changed
+	//gdispCloseFont(font);
 	
 	gfxInit();
 
@@ -174,9 +179,8 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(pyb_lcd_fill_obj, pyb_lcd_fill);
 
 /// \method text(str, x, y, colour)
 ///
-/// Draw the given text to the position `(x, y)` using the given colour (0 or 1).
+/// Draw the given text to the position `(x, y)` using the given colour.
 ///
-/// This method writes to the hidden buffer.  Use `show()` to show the buffer.
 STATIC mp_obj_t pyb_ugfx_text(mp_uint_t n_args, const mp_obj_t *args) {
     // extract arguments
     //pyb_ugfx_obj_t *self = args[0];
@@ -186,12 +190,141 @@ STATIC mp_obj_t pyb_ugfx_text(mp_uint_t n_args, const mp_obj_t *args) {
     int y0 = mp_obj_get_int(args[3]);
     int col = mp_obj_get_int(args[4]);
 
-    font_t font = gdispOpenFont("ui2");  //TODO: save fotn handle globally or in lcd object
-	gdispDrawString(x0, y0, data, font, col);	
-	gdispCloseFont(font);
+    //font_t font = gdispOpenFont("ui2");  //TODO: save fotn handle globally or in lcd object
+	gdispDrawString(x0, y0, data, default_font, col);	
+	//gdispCloseFont(font);
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(pyb_ugfx_text_obj, 5, 5, pyb_ugfx_text);
+
+
+/// \method line(x1, y1, x2, y2, colour)
+///
+/// Draw a line from (x1,y1) to (x2,y2) using the given colour.
+///
+STATIC mp_obj_t pyb_ugfx_line(mp_uint_t n_args, const mp_obj_t *args) {
+    // extract arguments
+    //pyb_ugfx_obj_t *self = args[0];
+    int x0 = mp_obj_get_int(args[1]);
+    int y0 = mp_obj_get_int(args[2]);
+	int x1 = mp_obj_get_int(args[3]);
+    int y1 = mp_obj_get_int(args[4]);
+    int col = mp_obj_get_int(args[5]);
+
+	gdispDrawLine(x0, y0, x1, y1, col);	
+
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(pyb_ugfx_line_obj, 6, 6, pyb_ugfx_line);
+
+
+/// \method thickline(x1, y1, x2, y2, colour, width, round)
+///
+/// Draw a line with a given thickness from (x1,y1) to (x2,y2) using the given colour.
+/// Option to round the ends
+///
+STATIC mp_obj_t pyb_ugfx_thickline(mp_uint_t n_args, const mp_obj_t *args) {
+    // extract arguments
+    //pyb_ugfx_obj_t *self = args[0];
+    int x0 = mp_obj_get_int(args[1]);
+    int y0 = mp_obj_get_int(args[2]);
+	int x1 = mp_obj_get_int(args[3]);
+    int y1 = mp_obj_get_int(args[4]);
+    int col = mp_obj_get_int(args[5]);
+    int width = mp_obj_get_int(args[6]);
+    bool rnd = (mp_obj_get_int(args[7]) != 0);
+
+	gdispDrawThickLine(x0, y0, x1, y1, col, width, rnd);	
+
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(pyb_ugfx_thickline_obj, 8, 8, pyb_ugfx_thickline);
+
+
+/// \method circle(x1, y1, r, colour)
+///
+/// Draw a circle having a centre point at (x1,y1), radius r, using the given colour.
+/// Option to round the ends
+///
+STATIC mp_obj_t pyb_ugfx_circle(mp_uint_t n_args, const mp_obj_t *args) {
+    // extract arguments
+    //pyb_ugfx_obj_t *self = args[0];
+    int x0 = mp_obj_get_int(args[1]);
+    int y0 = mp_obj_get_int(args[2]);
+	int r = mp_obj_get_int(args[3]);
+    int col = mp_obj_get_int(args[4]);
+
+
+	gdispDrawCircle(x0, y0, r, col);	
+
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(pyb_ugfx_circle_obj, 5, 5, pyb_ugfx_circle);
+
+/// \method fillcircle(x1, y1, r, colour)
+///
+/// Fill a circle having a centre point at (x1,y1), radius r, using the given colour.
+/// Option to round the ends
+///
+STATIC mp_obj_t pyb_ugfx_fillcircle(mp_uint_t n_args, const mp_obj_t *args) {
+    // extract arguments
+    //pyb_ugfx_obj_t *self = args[0];
+    int x0 = mp_obj_get_int(args[1]);
+    int y0 = mp_obj_get_int(args[2]);
+	int r = mp_obj_get_int(args[3]);
+    int col = mp_obj_get_int(args[4]);
+
+
+	gdispFillCircle(x0, y0, r, col);	
+
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(pyb_ugfx_fillcircle_obj, 5, 5, pyb_ugfx_fillcircle);
+
+
+
+
+/// \method ellipse(x1, y1, a, b, colour)
+///
+/// Draw a ellipse having a centre point at (x1,y1), lengths a,b, using the given colour.
+/// Option to round the ends
+///
+STATIC mp_obj_t pyb_ugfx_ellipse(mp_uint_t n_args, const mp_obj_t *args) {
+    // extract arguments
+    //pyb_ugfx_obj_t *self = args[0];
+    int x0 = mp_obj_get_int(args[1]);
+    int y0 = mp_obj_get_int(args[2]);
+	int a = mp_obj_get_int(args[3]);
+	int b = mp_obj_get_int(args[4]);
+    int col = mp_obj_get_int(args[5]);
+
+
+	gdispDrawEllipse(x0, y0, a, b, col);	
+
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(pyb_ugfx_ellipse_obj, 6, 6, pyb_ugfx_ellipse);
+
+/// \method fillellipse(x1, y1, a, b, colour)
+///
+/// Fill a ellipse having a centre point at (x1,y1), lengths a,b, using the given colour.
+/// Option to round the ends
+///
+STATIC mp_obj_t pyb_ugfx_fillellipse(mp_uint_t n_args, const mp_obj_t *args) {
+    // extract arguments
+    //pyb_ugfx_obj_t *self = args[0];
+    int x0 = mp_obj_get_int(args[1]);
+    int y0 = mp_obj_get_int(args[2]);
+	int a = mp_obj_get_int(args[3]);
+	int b = mp_obj_get_int(args[4]);
+    int col = mp_obj_get_int(args[5]);
+
+
+	gdispFillEllipse(x0, y0, a, b, col);	
+
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(pyb_ugfx_fillellipse_obj, 6, 6, pyb_ugfx_fillellipse);
 
 
 STATIC const mp_map_elem_t pyb_ugfx_locals_dict_table[] = {
@@ -202,6 +335,12 @@ STATIC const mp_map_elem_t pyb_ugfx_locals_dict_table[] = {
 //    { MP_OBJ_NEW_QSTR(MP_QSTR_write), (mp_obj_t)&pyb_lcd_write_obj },
 //    { MP_OBJ_NEW_QSTR(MP_QSTR_fill), (mp_obj_t)&pyb_lcd_fill_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_text), (mp_obj_t)&pyb_ugfx_text_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_line), (mp_obj_t)&pyb_ugfx_line_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_thickline), (mp_obj_t)&pyb_ugfx_thickline_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_circle), (mp_obj_t)&pyb_ugfx_circle_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_fillcircle), (mp_obj_t)&pyb_ugfx_fillcircle_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_ellipse), (mp_obj_t)&pyb_ugfx_ellipse_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_fillellipse), (mp_obj_t)&pyb_ugfx_fillellipse_obj },
 	
 	//class constants
     { MP_OBJ_NEW_QSTR(MP_QSTR_RED),        MP_OBJ_NEW_SMALL_INT(Red) },

@@ -128,7 +128,7 @@ STATIC void lcd_out(pyb_lcd_obj_t *lcd, int instr_data, uint8_t i) {
     HAL_SPI_Transmit(lcd->spi, &i, 1, 1000);
 }
 
-
+/*
 static const point data[5] = {
     { -40, -40 },
     { 70, 40 },
@@ -160,7 +160,7 @@ static const GGraphStyle GraphStyle2 = {
 };
 
 
-
+*/
 
 // write a string to the LCD at the current cursor location
 // output it straight away (doesn't use the pixel buffer)
@@ -246,7 +246,7 @@ STATIC mp_obj_t pyb_lcd_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp
 	//gdispFillArea(20, 20, 50, 50, 0x808080);
 	
 	
-	
+	/*
 	
 	GHandle     gh;
     uint16_t    i;
@@ -291,7 +291,7 @@ STATIC mp_obj_t pyb_lcd_make_new(const mp_obj_type_t *type, mp_uint_t n_args, mp
     gwinGraphDrawPoints(gh, data, sizeof(data)/sizeof(data[0]));
  
 
-	
+	*/
 	
 	
 	
