@@ -261,12 +261,12 @@ STATIC mp_obj_t pyb_ugfx_circle(mp_uint_t n_args, const mp_obj_t *args) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(pyb_ugfx_circle_obj, 5, 5, pyb_ugfx_circle);
 
-/// \method fillcircle(x1, y1, r, colour)
+/// \method fill_circle(x1, y1, r, colour)
 ///
 /// Fill a circle having a centre point at (x1,y1), radius r, using the given colour.
 /// Option to round the ends
 ///
-STATIC mp_obj_t pyb_ugfx_fillcircle(mp_uint_t n_args, const mp_obj_t *args) {
+STATIC mp_obj_t pyb_ugfx_fill_circle(mp_uint_t n_args, const mp_obj_t *args) {
     // extract arguments
     //pyb_ugfx_obj_t *self = args[0];
     int x0 = mp_obj_get_int(args[1]);
@@ -279,7 +279,7 @@ STATIC mp_obj_t pyb_ugfx_fillcircle(mp_uint_t n_args, const mp_obj_t *args) {
 
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(pyb_ugfx_fillcircle_obj, 5, 5, pyb_ugfx_fillcircle);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(pyb_ugfx_fill_circle_obj, 5, 5, pyb_ugfx_fill_circle);
 
 
 
@@ -305,12 +305,12 @@ STATIC mp_obj_t pyb_ugfx_ellipse(mp_uint_t n_args, const mp_obj_t *args) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(pyb_ugfx_ellipse_obj, 6, 6, pyb_ugfx_ellipse);
 
-/// \method fillellipse(x1, y1, a, b, colour)
+/// \method fill_ellipse(x1, y1, a, b, colour)
 ///
 /// Fill a ellipse having a centre point at (x1,y1), lengths a,b, using the given colour.
 /// Option to round the ends
 ///
-STATIC mp_obj_t pyb_ugfx_fillellipse(mp_uint_t n_args, const mp_obj_t *args) {
+STATIC mp_obj_t pyb_ugfx_fill_ellipse(mp_uint_t n_args, const mp_obj_t *args) {
     // extract arguments
     //pyb_ugfx_obj_t *self = args[0];
     int x0 = mp_obj_get_int(args[1]);
@@ -324,7 +324,54 @@ STATIC mp_obj_t pyb_ugfx_fillellipse(mp_uint_t n_args, const mp_obj_t *args) {
 
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(pyb_ugfx_fillellipse_obj, 6, 6, pyb_ugfx_fillellipse);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(pyb_ugfx_fill_ellipse_obj, 6, 6, pyb_ugfx_fill_ellipse);
+
+
+/// \method set_orientation(a)
+///
+/// Set orientation to 0, 90, 180 or 270 degrees
+///
+STATIC mp_obj_t pyb_ugfx_set_orientation(mp_obj_t self_in, mp_obj_t value) {
+    // extract arguments
+    //pyb_ugfx_obj_t *self = args[0];
+    int a = mp_obj_get_int(value);
+
+	if (a == 0)
+		gdispSetOrientation(GDISP_ROTATE_0);
+	else if (a == 90)
+		gdispSetOrientation(GDISP_ROTATE_90);
+	else if (a == 180)
+		gdispSetOrientation(GDISP_ROTATE_180);
+	else if (a == 270)
+		gdispSetOrientation(GDISP_ROTATE_270);
+		
+
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(pyb_ugfx_set_orientation_obj, pyb_ugfx_set_orientation);
+
+
+/// \method get_width()
+///
+/// Gets current width of the screen in pixels
+///
+STATIC mp_obj_t pyb_ugfx_get_width(mp_obj_t self_in) {
+    // extract arguments
+    //pyb_ugfx_obj_t *self = args[0];
+    return mp_obj_new_int(gdispGetWidth());
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(pyb_ugfx_get_width_obj, pyb_ugfx_get_width);
+
+/// \method get_height()
+///
+/// Gets current width of the screen in pixels
+///
+STATIC mp_obj_t pyb_ugfx_get_height(mp_obj_t self_in) {
+    // extract arguments
+    //pyb_ugfx_obj_t *self = args[0];
+    return mp_obj_new_int(gdispGetHeight());
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(pyb_ugfx_get_height_obj, pyb_ugfx_get_height);
 
 
 STATIC const mp_map_elem_t pyb_ugfx_locals_dict_table[] = {
@@ -338,9 +385,12 @@ STATIC const mp_map_elem_t pyb_ugfx_locals_dict_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_line), (mp_obj_t)&pyb_ugfx_line_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_thickline), (mp_obj_t)&pyb_ugfx_thickline_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_circle), (mp_obj_t)&pyb_ugfx_circle_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_fillcircle), (mp_obj_t)&pyb_ugfx_fillcircle_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_fill_circle), (mp_obj_t)&pyb_ugfx_fill_circle_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_ellipse), (mp_obj_t)&pyb_ugfx_ellipse_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_fillellipse), (mp_obj_t)&pyb_ugfx_fillellipse_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_fill_ellipse), (mp_obj_t)&pyb_ugfx_fill_ellipse_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_set_orientation), (mp_obj_t)&pyb_ugfx_set_orientation_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_get_width), (mp_obj_t)&pyb_ugfx_get_width_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_get_height), (mp_obj_t)&pyb_ugfx_get_height_obj },
 	
 	//class constants
     { MP_OBJ_NEW_QSTR(MP_QSTR_RED),        MP_OBJ_NEW_SMALL_INT(Red) },
